@@ -8,4 +8,4 @@ services:
             context: .
             dockerfile: Dockerfile
         image: heawercher/v2ray:latest
-        command: ["./v2ray", "-version"]
+        command: ["./v2ray", "-h"]
