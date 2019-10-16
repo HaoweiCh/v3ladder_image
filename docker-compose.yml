@@ -1,0 +1,11 @@
+version: "3"
+services:
+    kcptun_client:
+        container_name: "v2ray"
+        restart: unless-stopped
+        network_mode: "host"
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: heawercher/v2ray:latest
+        command: ["./v2ray", "-version"]
