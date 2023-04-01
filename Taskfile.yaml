@@ -1,0 +1,16 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+
+  act:
+   cmds:
+    - act -a haoweich/v3ladder_image --secret-file dev.secrets --container-architecture linux/amd64 --userns haoweich
