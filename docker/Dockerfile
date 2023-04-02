@@ -1,9 +1,9 @@
 FROM bitnami/minideb:bullseye
 
 RUN apt-get update -y \
-    && apt-get install -y --no-cache curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+&& apt-get install -y curl \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /entrypoint.sh
 
