@@ -1,29 +1,33 @@
 #! /bin/bash
 
-# Check if the image command is "start app"
+# Check if the image command starts with the app
 if [ "$1" = "app" ]; then
     echo "Checking for required dat files..."
 
-    # Check if geoip.dat exists
-    if [ ! -f geoip.dat ]; then
-        echo "geoip.dat not found. Downloading..."
-        curl -s -L -o geoip.dat "https://github.com/v2fly/geoip/raw/release/geoip.dat"
-    fi
+ # Define an array of URLs for the dat files
+    urls=(
+        "https://github.com/v2fly/geoip/raw/release/geoip.dat"
+        "https://github.com/v2fly/geoip/raw/release/geoip-only-cn-private.dat"
+        "https://github.com/v2fly/domain-list-community/raw/release/dlc.dat"
+    )
 
-    # Check if geoip-only-cn-private.dat exists
-    if [ ! -f geoip-only-cn-private.dat ]; then
-        echo "geoip-only-cn-private.dat not found. Downloading..."
-        curl -s -L -o geoip-only-cn-private.dat "https://github.com/v2fly/geoip/raw/release/geoip-only-cn-private.dat"
-    fi
+    # Define a function to download a single file
+    download_file() {
+        url=$1
+        filename=$(basename $url)
+        if [ ! -f $filename ]; then
+            echo "$filename not found. Downloading..."
+            curl -s -L -o $filename $url
+        fi
+    }
 
-    # Check if geosite.dat exists
-    if [ ! -f geosite.dat ]; then
-        echo "geosite.dat not found. Downloading..."
-        curl -s -L -o geosite.dat "https://github.com/v2fly/domain-list-community/raw/release/dlc.dat"
-    fi
+    # Download all files concurrently using background processes
+    for url in ${urls[@]}; do
+        download_file $url &
+    done
+    wait
 
     echo "All required dat files are present."
-
 fi
 
 exec $@
