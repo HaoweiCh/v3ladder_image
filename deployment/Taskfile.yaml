@@ -1,0 +1,22 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+  
+  rm:
+    cmds:
+      - docker ps -a -q --filter "ancestor=private.haoweich/v3ladder:amd64" | xargs docker rm
+      - docker image rm private.haoweich/v3ladder:amd64
+
+  up:
+    cmds:
+      - docker build -t private.haoweich/v3ladder:amd64 .
+      - docker run -it haoweich/v3ladder:amd64

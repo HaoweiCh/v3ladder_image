@@ -2,4 +2,6 @@ version: "3"
 services:
     v2ray:
         image: haoweich/v3ladder:amd64
-        command: app help
+        restart: unless-stopped
+        network_mode: host
+        command: app help run
