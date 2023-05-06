@@ -1,12 +1,15 @@
-name: docker image arm64
+name: v3ladder Docker image arm64
 
 on:
   push:
     branches:
       - master
+    paths:
+      - '.github/workflows/arm64.yaml'
+      - 'docker/Dockerfile'
 
 jobs:
-  docker-image-arm64:
+  build-docker-image-arm64:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,28 +28,21 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.20.3'
+          go-version: '1.20.4'
 
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           path: v3ladder-image
 
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          repository: haoweich/v3ladder
-          path: v3ladder-image/v3ladder
-          token: '${{ secrets.PAT }}'
-
       - name: Build Go project Linux arm64
         run: |
-          cd v3ladder-image/v3ladder
+          cd v3ladder-image
           go env -w GOPRIVATE="github.com/HaoweiCh/*,github.com/haoweich/*"
           git config --global url."https://oauth:${{ secrets.PAT }}@github.com/HaoweiCh/".insteadOf "https://github.com/HaoweiCh/"
           git config --global url."https://oauth:${{ secrets.PAT }}@github.com/HaoweiCh/".insteadOf "https://github.com/haoweich/"
           go mod tidy
-          GOARCH=arm64 GOOS=linux CGO_ENABLED=0 go build --trimpath -ldflags '-s -w' -o ../docker/app ./main
+          GOARCH=arm64 GOOS=linux CGO_ENABLED=0 go build --trimpath -ldflags '-s -w' -o docker/app ./v3ladder/main.go
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2

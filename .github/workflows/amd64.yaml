@@ -4,7 +4,9 @@ on:
   push:
     branches:
       - master
-
+    paths:
+      - '.github/workflows/amd64.yaml'
+      - 'docker/Dockerfile'
 jobs:
   docker-image-amd64:
     runs-on: ubuntu-latest
@@ -18,19 +20,19 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.20.3'
+          go-version: '1.20.4'
 
       - name: Checkout code
         uses: actions/checkout@v3
-        with: 
+        with:
           path: v3ladder-image
       - name: Checkout code
         uses: actions/checkout@v3
-        with: 
+        with:
           repository: haoweich/v3ladder
           path: v3ladder-image/v3ladder
           token: '${{ secrets.PAT }}'
-      
+
       - name: Build Go project Linux amd64
         run: |
           cd v3ladder-image/v3ladder
@@ -40,11 +42,10 @@ jobs:
           go mod tidy
           GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build --trimpath -ldflags '-s -w' -o ../docker/app ./main
 
-      - name: Build Docker image
-        run: |
-          cd v3ladder-image/
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:amd64 ./docker
-
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:amd64
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: v3ladder-image/docker
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:amd64
+          platforms: linux/amd64
