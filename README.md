@@ -6,7 +6,7 @@ The images are built using the code from the HaoweiCh/v3ladder repository.
 [![docker image arm64](https://github.com/HaoweiCh/v3ladder_image/actions/workflows/arm64.yaml/badge.svg)](https://github.com/HaoweiCh/v3ladder_image/actions/workflows/arm64.yaml)
 [![docker image arm64](https://github.com/HaoweiCh/v3ladder_image/actions/workflows/amd64.yaml/badge.svg)](https://github.com/HaoweiCh/v3ladder_image/actions/workflows/amd64.yaml)
 
-version: 5.4.1 (2fly, an interest-driven version) Custom (go1.20.2 linux/amd64)
+version: 5.4.1 (2fly, an interest-driven version) Custom (go1.20.4 linux/amd64)
 
 ## Docker Images
 
