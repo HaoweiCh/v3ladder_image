@@ -1,6 +1,9 @@
-name: Multi-Arch Docker Build and Push
+name: multi-Arch Docker Build and Push
 
 on:
+  push:
+    branches:
+      - master
   workflow_run:
     workflows: ["amd64", "arm64"]
     branches:
@@ -17,10 +20,10 @@ jobs:
     steps:
       - name: Check previous workflow runs
         id: check_workflow
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
-            const required_workflows = ['amd64', 'arm64'];
+            const required_workflows = ['amd64.yaml', 'arm64.yaml'];
             let success = true;
 
             for (const workflow_name of required_workflows) {
@@ -28,7 +31,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 workflow_id: workflow_name,
-                branch: 'main',
+                branch: 'master',
                 status: 'completed',
                 per_page: 1
               });
@@ -38,15 +41,21 @@ jobs:
                 break;
               }
             }
+            
+            console.log("return", {status: success})
 
-            return {status: success};
+            return success;
 
   build_and_push:
     needs: check_previous_workflows
-    if: ${{ needs.check_previous_workflows.outputs.status == 'true' }}
+#    if: ${{ needs.check_previous_workflows.outputs.status }}
     runs-on: ubuntu-latest
 
     steps:
+      - name: Print previous job outputs
+        run: |
+        echo "Last job outputs: ${{ needs.check_previous_workflows.outputs.status }}"
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
