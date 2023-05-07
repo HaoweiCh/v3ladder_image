@@ -1,0 +1,82 @@
+name: Multi-Arch Docker Build and Push
+
+on:
+  workflow_run:
+    workflows: ["amd64", "arm64"]
+    branches:
+      - master
+    types:
+      - completed
+
+jobs:
+  check_previous_workflows:
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.check_workflow.outputs.status }}
+
+    steps:
+      - name: Check previous workflow runs
+        id: check_workflow
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const required_workflows = ['amd64', 'arm64'];
+            let success = true;
+
+            for (const workflow_name of required_workflows) {
+              const {data: runs} = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflow_name,
+                branch: 'main',
+                status: 'completed',
+                per_page: 1
+              });
+
+              if (!runs.workflow_runs.length || runs.workflow_runs[0].conclusion !== 'success') {
+                success = false;
+                break;
+              }
+            }
+
+            return {status: success};
+
+  build_and_push:
+    needs: check_previous_workflows
+    if: ${{ needs.check_previous_workflows.outputs.status == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Pull images
+        run: |
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:amd64
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:arm64
+
+      - name: Combine and push multi-arch image
+        run: |
+          docker manifest create ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:latest \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:amd64 \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:arm64
+          
+          docker manifest annotate ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:latest \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:amd64 --os linux --arch amd64
+          
+          docker manifest annotate ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:latest \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:arm64 --os linux --arch arm64
+          
+          docker manifest push ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:latest
