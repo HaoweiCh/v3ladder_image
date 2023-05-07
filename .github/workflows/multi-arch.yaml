@@ -15,8 +15,7 @@ jobs:
   check_previous_workflows:
     runs-on: ubuntu-latest
     outputs:
-      status: ${{ steps.check_workflow.outputs.status }}
-
+      status: ${{ steps.set_output.outputs.status }}
     steps:
       - name: Check previous workflow runs
         id: check_workflow
@@ -42,19 +41,24 @@ jobs:
               }
             }
             
-            console.log("return", {status: success})
+            console.log("Workflow runs successful:", success);
+            
+            return { status: success };
 
-            return success;
+      - name: Set output
+        id: set_output
+        run: echo ::set-output name=status::${{ toJson(steps.check_workflow.outputs.status) }}
+
 
   build_and_push:
     needs: check_previous_workflows
-#    if: ${{ needs.check_previous_workflows.outputs.status }}
+#    if: ${{ needs.check_previous_workflows.outputs.status == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Print previous job outputs
         run: |
-        echo "Last job outputs: ${{ needs.check_previous_workflows.outputs.status }}"
+          echo "Last job outputs: ${{ needs.check_previous_workflows.outputs.status }}"
 
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -73,8 +77,8 @@ jobs:
 
       - name: Pull images
         run: |
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:amd64
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:arm64
+          docker pull --platform linux/amd64 ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:amd64
+          docker pull --platform linux/arm64 ${{ secrets.DOCKER_HUB_USERNAME }}/v3ladder:arm64
 
       - name: Combine and push multi-arch image
         run: |
